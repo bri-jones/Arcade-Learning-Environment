@@ -81,6 +81,9 @@ public:
   // game over screen.
   reward_t act(Action action);
 
+  // BSJ: new method for sending both player actions
+  reward_t act2(Action action1, Action action2);
+
   // Indicates if the game has ended.
   bool game_over() const;
 

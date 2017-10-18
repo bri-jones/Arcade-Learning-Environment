@@ -172,6 +172,11 @@ void ALEInterface::loadROM(std::string rom_file = "") {
   romSettings.reset(buildRomRLWrapper(rom_file));
   environment.reset(new StellaEnvironment(theOSystem.get(), romSettings.get()));
   max_num_frames = theOSystem->settings().getInt("max_num_frames_per_episode");
+  int mode = getInt("mode_select");
+  if (mode >= 1 && mode <= 4) {
+    Logger::Info << "Setting mode select to: " << mode << std::endl;
+    environment->setModeSelect(mode);
+  }
   environment->reset();
 #ifndef __USE_SDL
   if (theOSystem->p_display_screen != NULL) {
@@ -263,6 +268,22 @@ reward_t ALEInterface::act(Action action) {
       theOSystem->p_display_screen->display_screen();
     }
   }
+  return reward;
+}
+
+reward_t ALEInterface::act2(Action action1, Action action2) {
+  // action2 is from the same action set as action1, and must
+  // be offset to map it to the player 2 event codes
+  action2 = (Action)(action2 + PLAYER_B_NOOP);
+
+  reward_t reward = environment->act(action1, action2);
+  if (theOSystem->p_display_screen != NULL) {
+    theOSystem->p_display_screen->display_screen();
+  }
+  // TODO: current design only supports 1-player rewards, we will assume the
+  // game is 0-sum and therefore player2's score is the negative and does not
+  // need to be returned separately. A more flexible design would return
+  // a std::tuple<reward_t, reward_t>
   return reward;
 }
 

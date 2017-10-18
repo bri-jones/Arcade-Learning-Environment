@@ -26,7 +26,8 @@ StellaEnvironment::StellaEnvironment(OSystem* osystem, RomSettings* settings):
   m_screen(m_osystem->console().mediaSource().height(),
         m_osystem->console().mediaSource().width()),
   m_player_a_action(PLAYER_A_NOOP),
-  m_player_b_action(PLAYER_B_NOOP) {
+  m_player_b_action(PLAYER_B_NOOP),
+  m_mode_select(1) {
 
   // Determine whether this is a paddle-based game
   if (m_osystem->console().properties().get(Controller_Left) == "PADDLES" ||
@@ -74,6 +75,12 @@ void StellaEnvironment::reset() {
   noopSteps = 60;
 
   emulate(PLAYER_A_NOOP, PLAYER_B_NOOP, noopSteps);
+
+  for (int i = 1; i < m_mode_select; i++) {
+    activateSelectSwitch();
+    emulate(PLAYER_A_NOOP, PLAYER_B_NOOP, noopSteps);
+  }
+
   // reset for n steps
   emulate(RESET, PLAYER_B_NOOP, m_num_reset_steps);
 
@@ -195,6 +202,26 @@ bool StellaEnvironment::isTerminal() const {
      m_state.getEpisodeFrameNumber() >= m_max_num_frames_per_episode));
 }
 
+
+void StellaEnvironment::activateSelectSwitch() {
+  size_t num_steps = 10;
+  Event* event = m_osystem->event();
+  m_state.activateSelectSwitch(event);
+  for (size_t t = 0; t < num_steps; t++) {
+    m_osystem->console().mediaSource().update();
+    m_settings->step(m_osystem->console().system());
+  }
+  event = m_osystem->event();
+  m_state.resetKeys(event);
+  m_osystem->console().mediaSource().update();
+  m_settings->step(m_osystem->console().system());
+
+  // Parse screen and RAM into their respective data structures
+  processScreen();
+  processRAM(); 
+}
+
+
 void StellaEnvironment::emulate(Action player_a_action, Action player_b_action, size_t num_steps) {
   Event* event = m_osystem->event();
   
@@ -231,6 +258,10 @@ void StellaEnvironment::setState(const ALEState& state) {
 
 const ALEState& StellaEnvironment::getState() const {
   return m_state;
+}
+
+void StellaEnvironment::setModeSelect(int mode_select) {
+  m_mode_select = mode_select;
 }
 
 void StellaEnvironment::processScreen() {

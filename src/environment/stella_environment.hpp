@@ -56,6 +56,8 @@ class StellaEnvironment {
     /** Restores a previously saved copy of the state, including RNG state information. */
     void restoreSystemState(const ALEState&);
 
+    void activateSelectSwitch();
+
     /** Applies the given actions (e.g. updating paddle positions when the paddle is used)
       *  and performs one simulation step in Stella. Returns the resultant reward. When 
       *  frame skip is set to > 1, up the corresponding number of simulation steps are performed.
@@ -77,6 +79,8 @@ class StellaEnvironment {
 
     int getFrameNumber() const { return m_state.getFrameNumber(); }
     int getEpisodeFrameNumber() const { return m_state.getEpisodeFrameNumber(); }
+
+    void setModeSelect(int mode_select);
 
   private:
     /** This applies an action exactly one time step. Helper function to act(). */
@@ -118,6 +122,8 @@ class StellaEnvironment {
 
     // The last actions taken by our players
     Action m_player_a_action, m_player_b_action;
+
+    int m_mode_select; // primarily for multiplayer games
 };
 
 #endif // __STELLA_ENVIRONMENT_HPP__
